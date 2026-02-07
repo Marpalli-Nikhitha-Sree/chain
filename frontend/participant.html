@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supply-Chain Dashboard</title>
+    <script>
+      window.location.replace("./dashboard.html");
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f6f7fb;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 980px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: #475569;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #0f172a;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .card {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+      .label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+      .value {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 6px;
+        color: #0f172a;
+        word-break: break-all;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #0f172a;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .input-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      input[type="text"],
+      input[type="number"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5f5;
+        font-size: 14px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .hint {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+      }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Participant App</h1>
+      <p>
+        Use this app to record batches, transfers, and conditions. Transactions are only enabled when
+        you explicitly turn on write access.
+      </p>
+
+      <div class="row">
+        <button id="connectButton">Connect MetaMask</button>
+        <span class="badge" id="modeBadge">Mode: Local Hardhat</span>
+        <span class="badge" id="networkBadge">Network: Unknown</span>
+      </div>
+
+      <div class="card">
+        <div class="label">Connected wallet address</div>
+        <div class="value" id="walletAddress">Not connected</div>
+        <div class="status" id="statusText">Waiting for connection…</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Write access</div>
+        <div class="checkbox-row">
+          <input id="writeToggle" type="checkbox" />
+          <label for="writeToggle">Enable write actions (requires MetaMask confirmation)</label>
+        </div>
+        <div class="hint">Write actions are disabled by default to preserve read-only behavior.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Create batch</div>
+        <div class="input-grid">
+          <input id="batchIdInput" type="text" placeholder="Batch ID" />
+          <input id="productInput" type="text" placeholder="Product name" />
+          <input id="originInput" type="text" placeholder="Origin" />
+          <input id="expectedRouteInput" type="text" placeholder="Expected route (comma-separated addresses)" />
+          <input id="batchMetaInput" type="text" placeholder="Metadata" />
+        </div>
+        <button id="createBatchButton" class="secondary" disabled>Create Batch</button>
+      </div>
+
+      <div class="card">
+        <div class="label">Record transfer</div>
+        <div class="input-grid">
+          <input id="transferBatchInput" type="text" placeholder="Batch ID" />
+          <input id="transferToInput" type="text" placeholder="To address" />
+          <input id="transferLocationInput" type="text" placeholder="Location" />
+          <input id="transferMetaInput" type="text" placeholder="Metadata" />
+        </div>
+        <button id="recordTransferButton" class="secondary" disabled>Record Transfer</button>
+      </div>
+
+      <div class="card">
+        <div class="label">Record condition</div>
+        <div class="input-grid">
+          <input id="conditionBatchInput" type="text" placeholder="Batch ID" />
+          <input id="conditionTypeInput" type="text" placeholder="Condition type" />
+          <input id="conditionValueInput" type="text" placeholder="Value" />
+          <input id="conditionObservedInput" type="number" placeholder="Observed timestamp (unix)" />
+        </div>
+        <button id="recordConditionButton" class="secondary" disabled>Record Condition</button>
+      </div>
+
+      <div class="input-grid">
+        <input
+          id="commandInput"
+          type="text"
+          placeholder='Type command (e.g., "switch to main network")'
+        />
+        <button id="commandButton" class="secondary">Run Command</button>
+      </div>
+      <div class="hint">
+        Use the command “switch to main network” to stop assuming a local Hardhat environment.
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="./config.js"></script>
+    <script>
+      const connectButton = document.getElementById("connectButton");
+      const walletAddressEl = document.getElementById("walletAddress");
+      const statusTextEl = document.getElementById("statusText");
+      const modeBadge = document.getElementById("modeBadge");
+      const networkBadge = document.getElementById("networkBadge");
+      const commandInput = document.getElementById("commandInput");
+      const commandButton = document.getElementById("commandButton");
+      const writeToggle = document.getElementById("writeToggle");
+
+      const createBatchButton = document.getElementById("createBatchButton");
+      const recordTransferButton = document.getElementById("recordTransferButton");
+      const recordConditionButton = document.getElementById("recordConditionButton");
+
+      const batchIdInput = document.getElementById("batchIdInput");
+      const productInput = document.getElementById("productInput");
+      const originInput = document.getElementById("originInput");
+      const expectedRouteInput = document.getElementById("expectedRouteInput");
+      const batchMetaInput = document.getElementById("batchMetaInput");
+
+      const transferBatchInput = document.getElementById("transferBatchInput");
+      const transferToInput = document.getElementById("transferToInput");
+      const transferLocationInput = document.getElementById("transferLocationInput");
+      const transferMetaInput = document.getElementById("transferMetaInput");
+
+      const conditionBatchInput = document.getElementById("conditionBatchInput");
+      const conditionTypeInput = document.getElementById("conditionTypeInput");
+      const conditionValueInput = document.getElementById("conditionValueInput");
+      const conditionObservedInput = document.getElementById("conditionObservedInput");
+
+      let assumeLocalHardhat = true;
+      let connectedAddress = null;
+
+      const updateModeBadge = () => {
+        modeBadge.textContent = assumeLocalHardhat
+          ? "Mode: Local Hardhat"
+          : "Mode: MetaMask Active Network";
+      };
+
+      const setStatus = (message) => {
+        statusTextEl.textContent = message;
+      };
+
+      const setAddress = (address) => {
+        connectedAddress = address;
+        if (address) {
+          walletAddressEl.textContent = address;
+          localStorage.setItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY, address);
+        } else {
+          walletAddressEl.textContent = "Not connected";
+          localStorage.removeItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY);
+        }
+      };
+
+      const setNetworkBadge = (chainId) => {
+        if (!chainId) {
+          networkBadge.textContent = "Network: Unknown";
+          return;
+        }
+        const label =
+          chainId === SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID
+            ? "Hardhat (31337)"
+            : `Chain ${parseInt(chainId, 16)}`;
+        networkBadge.textContent = `Network: ${label}`;
+      };
+
+      const ensureMetaMask = () => {
+        if (!window.ethereum) {
+          setStatus("MetaMask not detected. Please install MetaMask to continue.");
+          return false;
+        }
+        return true;
+      };
+
+      const getProvider = () => {
+        return new ethers.providers.Web3Provider(window.ethereum, "any");
+      };
+
+      const getContract = (signerOrProvider) => {
+        if (!SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS) {
+          throw new Error("Set CONTRACT_ADDRESS in frontend/config.js after deployment.");
+        }
+        return new ethers.Contract(
+          SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS,
+          SUPPLYCHAIN_CONFIG.ABI,
+          signerOrProvider
+        );
+      };
+
+
+      const connectWallet = async () => {
+        if (!ensureMetaMask()) return;
+
+        try {
+          setStatus("Requesting account access...");
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          const address = accounts?.[0] ?? null;
+          if (!address) {
+            setStatus("No account returned by MetaMask.");
+            setAddress(null);
+            return;
+          }
+          setAddress(address);
+          setStatus("Wallet connected. Read-only mode enabled.");
+
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setNetworkBadge(chainId);
+
+          if (assumeLocalHardhat && chainId !== SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID) {
+            setStatus(
+              "Connected, but you are not on Hardhat 31337. Please switch to Hardhat in MetaMask for local testing."
+            );
+          }
+        } catch (error) {
+          setStatus(`Connection failed: ${error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const handleAccountsChanged = (accounts) => {
+        const address = accounts?.[0] ?? null;
+        if (!address) {
+          setAddress(null);
+          setStatus("Wallet disconnected.");
+          return;
+        }
+        setAddress(address);
+        setStatus("Wallet account updated. Read-only mode enabled.");
+      };
+
+      const handleChainChanged = (chainId) => {
+        setNetworkBadge(chainId);
+        if (assumeLocalHardhat && chainId !== SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID) {
+          setStatus("Network changed. For local testing, switch back to Hardhat 31337.");
+        } else {
+          setStatus("Network changed. Read-only mode enabled.");
+        }
+      };
+
+      const updateWriteButtons = () => {
+        const enabled = writeToggle.checked && !!connectedAddress;
+        createBatchButton.disabled = !enabled;
+        recordTransferButton.disabled = !enabled;
+        recordConditionButton.disabled = !enabled;
+      };
+
+      const createBatch = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        const batchId = batchIdInput.value.trim();
+        const productName = productInput.value.trim();
+        const origin = originInput.value.trim();
+        const expectedRouteRaw = expectedRouteInput.value.trim();
+        const metadata = batchMetaInput.value.trim();
+
+        if (!batchId || !productName || !origin) {
+          setStatus("Batch ID, product name, and origin are required.");
+          return;
+        }
+
+        try {
+          setStatus("Submitting batch creation...");
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+          const expectedRoute = expectedRouteRaw
+            ? expectedRouteRaw.split(",").map((value) => value.trim()).filter(Boolean)
+            : [];
+
+          const tx = await contract.createBatch(batchId, productName, origin, expectedRoute, metadata);
+          await tx.wait();
+          setStatus("Batch created successfully.");
+        } catch (error) {
+          setStatus(`Batch creation failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const recordTransfer = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        const batchId = transferBatchInput.value.trim();
+        const to = transferToInput.value.trim();
+        const location = transferLocationInput.value.trim();
+        const metadata = transferMetaInput.value.trim();
+
+        if (!batchId || !to || !location) {
+          setStatus("Batch ID, destination address, and location are required.");
+          return;
+        }
+
+        try {
+          setStatus("Submitting transfer record...");
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+
+          const tx = await contract.recordTransfer(batchId, to, location, metadata);
+          await tx.wait();
+          setStatus("Transfer recorded successfully.");
+        } catch (error) {
+          setStatus(`Transfer failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const recordCondition = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        const batchId = conditionBatchInput.value.trim();
+        const conditionType = conditionTypeInput.value.trim();
+        const value = conditionValueInput.value.trim();
+        const observedAtRaw = conditionObservedInput.value.trim();
+        const observedAt = observedAtRaw ? Number(observedAtRaw) : Math.floor(Date.now() / 1000);
+
+        if (!batchId || !conditionType || !value) {
+          setStatus("Batch ID, condition type, and value are required.");
+          return;
+        }
+
+        try {
+          setStatus("Submitting condition record...");
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+
+          const tx = await contract.recordCondition(batchId, conditionType, value, observedAt);
+          await tx.wait();
+          setStatus("Condition recorded successfully.");
+        } catch (error) {
+          setStatus(`Condition failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const runCommand = () => {
+        const command = commandInput.value.trim().toLowerCase();
+        if (!command) return;
+
+        if (command === "switch to main network") {
+          assumeLocalHardhat = false;
+          updateModeBadge();
+          setStatus("Mode updated. Using MetaMask active network.");
+        } else {
+          setStatus(`Unknown command: ${command}`);
+        }
+        commandInput.value = "";
+      };
+
+      connectButton.addEventListener("click", connectWallet);
+      commandButton.addEventListener("click", runCommand);
+      createBatchButton.addEventListener("click", createBatch);
+      recordTransferButton.addEventListener("click", recordTransfer);
+      recordConditionButton.addEventListener("click", recordCondition);
+      writeToggle.addEventListener("change", updateWriteButtons);
+
+      updateModeBadge();
+      setAddress(localStorage.getItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY));
+      updateWriteButtons();
+
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+      }
+    </script>
+  </body>
+</html>

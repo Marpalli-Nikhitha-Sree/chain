@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supply-Chain Role</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f6f7fb;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 1020px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: #475569;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .card {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+      .label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+      .value {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 6px;
+        color: #0f172a;
+        word-break: break-all;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #0f172a;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #0f172a;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .input-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+      .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .item {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .item-title {
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .item-meta {
+        font-size: 12px;
+        color: #64748b;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        font-size: 11px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      input[type="text"],
+      input[type="number"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5f5;
+        font-size: 14px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .hint {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+      .hidden {
+        display: none;
+      }
+      .qr-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px dashed #cbd5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row" style="justify-content: space-between;">
+        <div>
+          <h1 id="roleTitle">Role</h1>
+          <p id="roleDescription">Role workspace</p>
+        </div>
+        <button class="secondary" onclick="location.href='./dashboard.html'">Back to Dashboard</button>
+      </div>
+
+      <div class="row">
+        <button id="connectButton">Connect MetaMask</button>
+        <span class="badge" id="networkBadge">Network: Unknown</span>
+      </div>
+
+      <div class="card">
+        <div class="label">Connected wallet address</div>
+        <div class="value" id="walletAddress">Not connected</div>
+        <div class="value" id="walletBalance">Balance: —</div>
+        <div class="status" id="statusText">Waiting for connection…</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Create account</div>
+        <div class="input-grid">
+          <input id="accountNameInput" type="text" placeholder="Name" />
+          <input id="accountOrgInput" type="text" placeholder="Organization" />
+          <input id="accountAddressInput" type="text" placeholder="Wallet address" />
+        </div>
+        <button id="createAccountButton" class="secondary">Save Account</button>
+        <div class="hint">Account info is stored locally for identification only.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Write access</div>
+        <div class="row" style="margin-top: 8px;">
+          <input id="writeToggle" type="checkbox" />
+          <label for="writeToggle">Enable write actions (requires MetaMask confirmation)</label>
+        </div>
+        <div class="hint">Write actions are disabled by default to preserve read-only behavior.</div>
+      </div>
+
+
+      <div class="card" id="manufacturerAddSection">
+        <div class="label">Add product (manufacturer)</div>
+        <div class="input-grid">
+          <input id="batchIdInput" type="text" placeholder="Batch code" />
+          <input id="productNameInput" type="text" placeholder="Product name" />
+          <input id="originInput" type="text" placeholder="Origin" />
+          <input id="categoryInput" type="text" placeholder="Category" />
+          <input id="priceInput" type="number" placeholder="Batch price (ETH)" step="0.0001" />
+          <input id="latInput" type="number" placeholder="Latitude" step="0.000001" />
+          <input id="lngInput" type="number" placeholder="Longitude" step="0.000001" />
+          <input id="metadataInput" type="text" placeholder="Metadata" />
+        </div>
+        <button id="createBatchButton" class="secondary" disabled>Add Product</button>
+      </div>
+
+      <div class="columns">
+        <div class="card" id="addedSection">
+          <div class="label">Added products</div>
+          <ul id="addedList" class="list"></ul>
+        </div>
+        <div class="card" id="shippedSection">
+          <div class="label">Shipped products</div>
+          <ul id="shippedList" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="columns">
+        <div class="card" id="purchasedSection">
+          <div class="label">Purchased (pending ship)</div>
+          <ul id="purchasedList" class="list"></ul>
+        </div>
+        <div class="card" id="receivedSection">
+          <div class="label">Received products</div>
+          <ul id="receivedList" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="card" id="shipSection">
+        <div class="label">Ship product (accept purchase)</div>
+        <div class="input-grid">
+          <input id="shipBatchInput" type="text" placeholder="Batch code" />
+          <input id="shipLocationInput" type="text" placeholder="Location" />
+          <input id="shipMetaInput" type="text" placeholder="Metadata" />
+          <input id="shipLatInput" type="number" placeholder="Latitude" step="0.000001" />
+          <input id="shipLngInput" type="number" placeholder="Longitude" step="0.000001" />
+        </div>
+        <button id="shipButton" class="secondary" disabled>Ship Product</button>
+      </div>
+
+      <div class="card" id="buySection">
+        <div class="label">Buy product</div>
+        <div class="value">Available products</div>
+        <ul id="availableList" class="list"></ul>
+      </div>
+
+      <div class="card" id="receiveSection">
+        <div class="label">Receive product</div>
+        <div class="input-grid">
+          <input id="receiveBatchInput" type="text" placeholder="Batch code" />
+          <input id="receiveLatInput" type="number" placeholder="Latitude" step="0.000001" />
+          <input id="receiveLngInput" type="number" placeholder="Longitude" step="0.000001" />
+        </div>
+        <button id="receiveButton" class="secondary" disabled>Receive Product</button>
+      </div>
+
+      <div class="card" id="inventorySection">
+        <div class="label">Inventory</div>
+        <ul id="inventoryList" class="list"></ul>
+      </div>
+
+      <div class="card" id="customerQrSection">
+        <div class="label">Customer QR details</div>
+        <div class="input-grid">
+          <input id="qrBatchInput" type="text" placeholder="Batch code" />
+        </div>
+        <button id="qrButton" class="secondary" disabled>Generate QR</button>
+        <div class="qr-box" style="margin-top: 12px;">
+          <canvas id="qrCanvas" width="240" height="240"></canvas>
+        </div>
+        <div class="hint">Product details are encoded in the QR code for customer verification.</div>
+      </div>
+
+      <div class="input-grid" style="margin-top: 16px;">
+        <div class="hint" style="margin-top: 16px;">
+          Network selection and signing are handled by MetaMask.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="./config.js"></script>
+    <script src="./anomaly.js"></script>
+    <script>
+      const roleParam = new URLSearchParams(window.location.search).get("role") || "customer";
+      const roleTitle = document.getElementById("roleTitle");
+      const roleDescription = document.getElementById("roleDescription");
+
+      const connectButton = document.getElementById("connectButton");
+      const walletAddressEl = document.getElementById("walletAddress");
+      const walletBalanceEl = document.getElementById("walletBalance");
+      const statusTextEl = document.getElementById("statusText");
+      const networkBadge = document.getElementById("networkBadge");
+      const writeToggle = document.getElementById("writeToggle");
+
+      const accountNameInput = document.getElementById("accountNameInput");
+      const accountOrgInput = document.getElementById("accountOrgInput");
+      const accountAddressInput = document.getElementById("accountAddressInput");
+      const createAccountButton = document.getElementById("createAccountButton");
+
+
+      const manufacturerAddSection = document.getElementById("manufacturerAddSection");
+      const batchIdInput = document.getElementById("batchIdInput");
+      const productNameInput = document.getElementById("productNameInput");
+      const originInput = document.getElementById("originInput");
+      const categoryInput = document.getElementById("categoryInput");
+      const priceInput = document.getElementById("priceInput");
+      const latInput = document.getElementById("latInput");
+      const lngInput = document.getElementById("lngInput");
+      const metadataInput = document.getElementById("metadataInput");
+      const createBatchButton = document.getElementById("createBatchButton");
+
+      const shipSection = document.getElementById("shipSection");
+      const shipBatchInput = document.getElementById("shipBatchInput");
+      const shipLocationInput = document.getElementById("shipLocationInput");
+      const shipMetaInput = document.getElementById("shipMetaInput");
+      const shipLatInput = document.getElementById("shipLatInput");
+      const shipLngInput = document.getElementById("shipLngInput");
+      const shipButton = document.getElementById("shipButton");
+
+      const buySection = document.getElementById("buySection");
+      const availableList = document.getElementById("availableList");
+
+      const receiveSection = document.getElementById("receiveSection");
+      const receiveBatchInput = document.getElementById("receiveBatchInput");
+      const receiveLatInput = document.getElementById("receiveLatInput");
+      const receiveLngInput = document.getElementById("receiveLngInput");
+      const receiveButton = document.getElementById("receiveButton");
+
+      const inventorySection = document.getElementById("inventorySection");
+      const inventoryList = document.getElementById("inventoryList");
+      const addedSection = document.getElementById("addedSection");
+      const addedList = document.getElementById("addedList");
+      const shippedSection = document.getElementById("shippedSection");
+      const shippedList = document.getElementById("shippedList");
+      const purchasedSection = document.getElementById("purchasedSection");
+      const purchasedList = document.getElementById("purchasedList");
+      const receivedSection = document.getElementById("receivedSection");
+      const receivedList = document.getElementById("receivedList");
+
+      const customerQrSection = document.getElementById("customerQrSection");
+      const qrBatchInput = document.getElementById("qrBatchInput");
+      const qrButton = document.getElementById("qrButton");
+      const qrCanvas = document.getElementById("qrCanvas");
+
+      let connectedAddress = null;
+      let refreshTimer = null;
+
+      const roleConfig = {
+        manufacturer: {
+          title: "Manufacturer Workspace",
+          description: "Add products, approve purchase requests, and view manufacturer inventory.",
+          showAdmin: false,
+          showAdd: true,
+          showAdded: true,
+          showShipped: true,
+          showPurchased: false,
+          showReceived: false,
+          showBuy: false,
+          showShip: true,
+          showReceive: false,
+          showInventory: true,
+          showQr: false,
+          buyStage: null
+        },
+        distributor: {
+          title: "Distributor Workspace",
+          description: "Buy products from manufacturers, receive shipments, and sell to retailers.",
+          showAdmin: false,
+          showAdd: false,
+          showAdded: false,
+          showShipped: true,
+          showPurchased: true,
+          showReceived: true,
+          showBuy: true,
+          showShip: true,
+          showReceive: true,
+          showInventory: true,
+          showQr: false,
+          buyStage: 0
+        },
+        retailer: {
+          title: "Retailer Workspace",
+          description: "Buy products from distributors, receive shipments, and sell to customers.",
+          showAdmin: false,
+          showAdd: false,
+          showAdded: false,
+          showShipped: true,
+          showPurchased: true,
+          showReceived: true,
+          showBuy: true,
+          showShip: true,
+          showReceive: true,
+          showInventory: true,
+          showQr: false,
+          buyStage: 1
+        },
+        customer: {
+          title: "Customer Workspace",
+          description: "Purchase products, receive ownership, and view details via QR code.",
+          showAdmin: false,
+          showAdd: false,
+          showAdded: false,
+          showShipped: false,
+          showPurchased: true,
+          showReceived: true,
+          showBuy: true,
+          showShip: false,
+          showReceive: true,
+          showInventory: true,
+          showQr: true,
+          buyStage: 2
+        }
+      };
+
+      const activeRole = roleConfig[roleParam] || roleConfig.customer;
+      roleTitle.textContent = activeRole.title;
+      roleDescription.textContent = activeRole.description;
+
+      manufacturerAddSection.classList.toggle("hidden", !activeRole.showAdd);
+      buySection.classList.toggle("hidden", !activeRole.showBuy);
+      shipSection.classList.toggle("hidden", !activeRole.showShip);
+      receiveSection.classList.toggle("hidden", !activeRole.showReceive);
+      inventorySection.classList.toggle("hidden", !activeRole.showInventory);
+      customerQrSection.classList.toggle("hidden", !activeRole.showQr);
+      addedSection.classList.toggle("hidden", !activeRole.showAdded);
+      shippedSection.classList.toggle("hidden", !activeRole.showShipped);
+      purchasedSection.classList.toggle("hidden", !activeRole.showPurchased);
+      receivedSection.classList.toggle("hidden", !activeRole.showReceived);
+
+
+      const setStatus = (message) => {
+        statusTextEl.textContent = message;
+      };
+
+      const setAddress = (address) => {
+        connectedAddress = address;
+        if (address) {
+          walletAddressEl.textContent = address;
+          localStorage.setItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY, address);
+        } else {
+          walletAddressEl.textContent = "Not connected";
+          localStorage.removeItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY);
+        }
+      };
+
+      const setBalance = async () => {
+        if (!connectedAddress) {
+          walletBalanceEl.textContent = "Balance: —";
+          return;
+        }
+        try {
+          const provider = getProvider();
+          const balance = await provider.getBalance(connectedAddress);
+          walletBalanceEl.textContent = `Balance: ${ethers.utils.formatEther(balance)} ETH`;
+        } catch (error) {
+          walletBalanceEl.textContent = "Balance: —";
+        }
+      };
+
+      const startAutoRefresh = () => {
+        if (refreshTimer) return;
+        refreshTimer = setInterval(() => {
+          loadInventory();
+          loadAvailableProducts();
+          setBalance();
+        }, 5000);
+      };
+
+      const stopAutoRefresh = () => {
+        if (refreshTimer) {
+          clearInterval(refreshTimer);
+          refreshTimer = null;
+        }
+      };
+
+      const setNetworkBadge = (chainId) => {
+        if (!chainId) {
+          networkBadge.textContent = "Network: Unknown";
+          return;
+        }
+        networkBadge.textContent = `Network: Chain ${parseInt(chainId, 16)}`;
+      };
+
+      const ensureMetaMask = () => {
+        if (!window.ethereum) {
+          setStatus("MetaMask not detected. Please install MetaMask to continue.");
+          return false;
+        }
+        return true;
+      };
+
+      const getProvider = () => new ethers.providers.Web3Provider(window.ethereum, "any");
+
+      const ensureContractDeployed = async () => {
+        if (!SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS) {
+          setStatus("Contract address is not set.");
+          return false;
+        }
+        try {
+          const provider = getProvider();
+          const code = await provider.getCode(SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS);
+          if (code === "0x") {
+            setStatus("Contract not found on this network. Update CONTRACT_ADDRESS for the selected network.");
+            return false;
+          }
+          return true;
+        } catch (error) {
+          setStatus("Unable to verify contract on this network.");
+          return false;
+        }
+      };
+
+      const getContract = (signerOrProvider) => {
+        if (!SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS) {
+          throw new Error("Set CONTRACT_ADDRESS in frontend/config.js after deployment.");
+        }
+        return new ethers.Contract(
+          SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS,
+          SUPPLYCHAIN_CONFIG.ABI,
+          signerOrProvider
+        );
+      };
+
+      const connectWallet = async () => {
+        if (!ensureMetaMask()) return;
+
+        try {
+          setStatus("Requesting account access...");
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          const address = accounts?.[0] ?? null;
+          if (!address) {
+            setStatus("No account returned by MetaMask.");
+            setAddress(null);
+            return;
+          }
+          setAddress(address);
+          setStatus("Wallet connected. Read-only mode enabled.");
+          await setBalance();
+
+          const hasContract = await ensureContractDeployed();
+          if (!hasContract) {
+            stopAutoRefresh();
+            return;
+          }
+
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setNetworkBadge(chainId);
+
+          await loadInventory();
+          await loadAvailableProducts();
+          startAutoRefresh();
+        } catch (error) {
+          setStatus(`Connection failed: ${error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const handleAccountsChanged = (accounts) => {
+        const address = accounts?.[0] ?? null;
+        if (!address) {
+          setAddress(null);
+          setStatus("Wallet disconnected.");
+          setBalance();
+          stopAutoRefresh();
+          return;
+        }
+        setAddress(address);
+        setStatus("Wallet account updated. Read-only mode enabled.");
+        ensureContractDeployed().then((ok) => {
+          if (ok) {
+            loadInventory();
+            loadAvailableProducts();
+          }
+        });
+        setBalance();
+      };
+
+      const handleChainChanged = (chainId) => {
+        setNetworkBadge(chainId);
+        setStatus("Network changed. Read-only mode enabled.");
+        setBalance();
+        ensureContractDeployed().then((ok) => {
+          if (ok) {
+            loadInventory();
+            loadAvailableProducts();
+            startAutoRefresh();
+          } else {
+            stopAutoRefresh();
+          }
+        });
+      };
+
+      const updateWriteButtons = () => {
+        const enabled = writeToggle.checked && !!connectedAddress;
+        createBatchButton.disabled = !enabled;
+        shipButton.disabled = !enabled;
+        receiveButton.disabled = !enabled;
+        qrButton.disabled = !connectedAddress;
+      };
+
+      const saveAccount = () => {
+        const addressInput = accountAddressInput.value.trim();
+        const addressToStore = addressInput || connectedAddress;
+        if (!addressToStore) {
+          setStatus("Enter a wallet address or connect MetaMask.");
+          return;
+        }
+        const payload = {
+          role: roleParam,
+          name: accountNameInput.value.trim(),
+          organization: accountOrgInput.value.trim(),
+          address: addressToStore
+        };
+        localStorage.setItem(`supplychain.account.${roleParam}`, JSON.stringify(payload));
+        setStatus("Account saved locally.");
+      };
+
+
+      const createBatch = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const batchId = batchIdInput.value.trim();
+          const productName = productNameInput.value.trim();
+          const origin = originInput.value.trim();
+          const category = categoryInput.value.trim();
+          const priceEth = priceInput.value.trim();
+          const latitude = latInput.value.trim();
+          const longitude = lngInput.value.trim();
+          const metadata = metadataInput.value.trim();
+
+          if (!batchId || !productName || !origin || !priceEth) {
+            setStatus("Batch code, product name, origin, and price are required.");
+            return;
+          }
+
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+          const priceWei = ethers.utils.parseEther(priceEth);
+          const expectedRoute = [];
+
+          setStatus("Submitting batch creation...");
+          const tx = await contract.createBatch(
+            batchId,
+            productName,
+            origin,
+            expectedRoute,
+            metadata,
+            category,
+            priceWei,
+            latitude ? Math.trunc(Number(latitude) * 1e6) : 0,
+            longitude ? Math.trunc(Number(longitude) * 1e6) : 0
+          );
+          await tx.wait();
+          setStatus("Product added successfully.");
+          await loadInventory();
+          await loadAvailableProducts();
+          await setBalance();
+        } catch (error) {
+          setStatus(`Add product failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const shipProduct = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const batchId = shipBatchInput.value.trim();
+          const location = shipLocationInput.value.trim();
+          const metadata = shipMetaInput.value.trim();
+          const latitude = shipLatInput.value.trim();
+          const longitude = shipLngInput.value.trim();
+
+          if (!batchId || !location) {
+            setStatus("Batch code and location are required.");
+            return;
+          }
+
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+
+          setStatus("Shipping product...");
+          const tx = await contract.shipProduct(
+            batchId,
+            location,
+            metadata,
+            latitude ? Math.trunc(Number(latitude) * 1e6) : 0,
+            longitude ? Math.trunc(Number(longitude) * 1e6) : 0
+          );
+          await tx.wait();
+          setStatus("Shipment accepted.");
+          await loadInventory();
+          await loadAvailableProducts();
+          await setBalance();
+        } catch (error) {
+          setStatus(`Ship failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const receiveProduct = async () => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const batchId = receiveBatchInput.value.trim();
+          const latitude = receiveLatInput.value.trim();
+          const longitude = receiveLngInput.value.trim();
+
+          if (!batchId) {
+            setStatus("Batch code is required.");
+            return;
+          }
+
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+
+          setStatus("Recording receipt...");
+          const tx = await contract.receiveProduct(
+            batchId,
+            latitude ? Math.trunc(Number(latitude) * 1e6) : 0,
+            longitude ? Math.trunc(Number(longitude) * 1e6) : 0
+          );
+          await tx.wait();
+          setStatus("Receipt recorded.");
+          await loadInventory();
+          await setBalance();
+        } catch (error) {
+          setStatus(`Receive failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const buyProduct = async (batch) => {
+        if (!writeToggle.checked) {
+          setStatus("Enable write actions to submit transactions.");
+          return;
+        }
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const provider = getProvider();
+          const signer = provider.getSigner();
+          const contract = getContract(signer);
+
+          setStatus("Submitting purchase...");
+          const tx = await contract.buyProduct(batch.batchId, { value: batch.price });
+          await tx.wait();
+          setStatus("Purchase request submitted.");
+          await loadInventory();
+          await loadAvailableProducts();
+          await setBalance();
+        } catch (error) {
+          setStatus(`Purchase failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const renderList = (listEl, items, renderItem, emptyText) => {
+        listEl.innerHTML = "";
+        if (!items.length) {
+          const li = document.createElement("li");
+          li.className = "item";
+          li.textContent = emptyText;
+          listEl.appendChild(li);
+          return;
+        }
+        items.forEach((item) => listEl.appendChild(renderItem(item)));
+      };
+
+      const renderBatchItem = (batch, extraMeta) => {
+        const li = document.createElement("li");
+        li.className = "item";
+        const priceEth = ethers.utils.formatEther(batch.price || 0);
+        li.innerHTML = `
+          <div class="item-title">${batch.productName} <span class="pill">${batch.batchId}</span></div>
+          <div class="item-meta">Category: ${batch.category || "—"} · Price: ${priceEth} ETH</div>
+          <div class="item-meta">Stage: ${Number(batch.stage)} · Holder: ${batch.currentHolder}</div>
+          ${extraMeta ? `<div class="item-meta">${extraMeta}</div>` : ""}
+        `;
+        return li;
+      };
+
+      const loadInventory = async () => {
+        if (!connectedAddress) return;
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const provider = getProvider();
+          const contract = getContract(provider);
+          const batchIds = await contract.getBatchIds();
+          const batches = await Promise.all(batchIds.map((id) => contract.getBatch(id)));
+          const inventory = batches.filter(
+            (batch) => batch.currentHolder?.toLowerCase() === connectedAddress.toLowerCase()
+          );
+
+          renderList(
+            inventoryList,
+            inventory,
+            (batch) => renderBatchItem(batch, "In your inventory"),
+            "No products in inventory."
+          );
+
+          if (activeRole.showAdded) {
+            const added = batches.filter(
+              (batch) => batch.manufacturer?.toLowerCase() === connectedAddress.toLowerCase()
+            );
+            renderList(
+              addedList,
+              added,
+              (batch) => renderBatchItem(batch, "Added by you"),
+              "No added products yet."
+            );
+          }
+
+          if (activeRole.showShipped) {
+            const transferLists = await Promise.all(
+              batchIds.map((id) => contract.getTransfers(id))
+            );
+            const shipped = [];
+            transferLists.forEach((transfers, index) => {
+              const batch = batches[index];
+              const match = transfers.find(
+                (t) => t.from?.toLowerCase() === connectedAddress.toLowerCase()
+              );
+              if (match) {
+                shipped.push({ batch, transfer: match });
+              }
+            });
+
+            renderList(
+              shippedList,
+              shipped,
+              ({ batch, transfer }) =>
+                renderBatchItem(
+                  batch,
+                  `Shipped to ${transfer.to} · ${new Date(
+                    Number(transfer.timestamp) * 1000
+                  ).toLocaleString()}`
+                ),
+              "No shipped products yet."
+            );
+          }
+
+          if (activeRole.showPurchased) {
+            const purchased = batches.filter(
+              (batch) => batch.pendingBuyer?.toLowerCase() === connectedAddress.toLowerCase()
+            );
+            renderList(
+              purchasedList,
+              purchased,
+              (batch) => renderBatchItem(batch, "Purchase submitted. Waiting for ship."),
+              "No purchases pending shipment."
+            );
+          }
+
+          if (activeRole.showReceived) {
+            const transferLists = await Promise.all(
+              batchIds.map((id) => contract.getTransfers(id))
+            );
+            const received = [];
+            transferLists.forEach((transfers, index) => {
+              const batch = batches[index];
+              const match = [...transfers].reverse().find(
+                (t) => t.to?.toLowerCase() === connectedAddress.toLowerCase()
+              );
+              if (match && batch.currentHolder?.toLowerCase() === connectedAddress.toLowerCase()) {
+                received.push({ batch, transfer: match });
+              }
+            });
+
+            renderList(
+              receivedList,
+              received,
+              ({ batch, transfer }) =>
+                renderBatchItem(
+                  batch,
+                  `Received from ${transfer.from} · ${new Date(
+                    Number(transfer.timestamp) * 1000
+                  ).toLocaleString()}`
+                ),
+              "No received products yet."
+            );
+          }
+        } catch (error) {
+          inventoryList.innerHTML = "";
+          if (activeRole.showAdded) addedList.innerHTML = "";
+          if (activeRole.showShipped) shippedList.innerHTML = "";
+          if (activeRole.showPurchased) purchasedList.innerHTML = "";
+          if (activeRole.showReceived) receivedList.innerHTML = "";
+        }
+      };
+
+      const loadAvailableProducts = async () => {
+        if (!connectedAddress || !activeRole.showBuy) return;
+        if (!(await ensureContractDeployed())) return;
+        try {
+          const provider = getProvider();
+          const contract = getContract(provider);
+          const batchIds = await contract.getBatchIds();
+          const batches = await Promise.all(batchIds.map((id) => contract.getBatch(id)));
+
+          const available = batches.filter((batch) => {
+            const stageMatches = activeRole.buyStage !== null ? Number(batch.stage) === activeRole.buyStage : false;
+            return stageMatches && batch.pendingBuyer === ethers.constants.AddressZero;
+          });
+
+          renderList(
+            availableList,
+            available,
+            (batch) => {
+              const priceEth = ethers.utils.formatEther(batch.price || 0);
+              const li = renderBatchItem(batch, "Available to buy");
+              const button = document.createElement("button");
+              button.textContent = `Buy ${batch.batchId} (${priceEth} ETH)`;
+              button.className = "secondary";
+              button.disabled = !writeToggle.checked;
+              button.addEventListener("click", () => buyProduct(batch));
+              li.appendChild(button);
+              return li;
+            },
+            "No products available for purchase."
+          );
+        } catch (error) {
+          availableList.innerHTML = "";
+        }
+      };
+
+      const generateQr = async () => {
+        const batchId = qrBatchInput.value.trim();
+        if (!batchId) {
+          setStatus("Batch code is required for QR.");
+          return;
+        }
+        try {
+          const provider = getProvider();
+          const contract = getContract(provider);
+          const batch = await contract.getBatch(batchId);
+          const transfers = await contract.getTransfers(batchId);
+          const conditions = await contract.getConditions(batchId);
+          const anomalies = analyzeAnomalies({ batch, transfers, conditions });
+
+          const payload = {
+            batchId: batch.batchId,
+            productName: batch.productName,
+            category: batch.category,
+            priceEth: ethers.utils.formatEther(batch.price || 0),
+            manufacturer: batch.manufacturer,
+            origin: batch.origin,
+            stage: Number(batch.stage),
+            currentHolder: batch.currentHolder,
+            location: {
+              latitude: Number(batch.latitude) / 1e6,
+              longitude: Number(batch.longitude) / 1e6
+            },
+            anomalies
+          };
+
+          await QRCode.toCanvas(qrCanvas, JSON.stringify(payload), { width: 240 });
+          setStatus("QR code generated.");
+        } catch (error) {
+          setStatus(`QR generation failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      connectButton.addEventListener("click", connectWallet);
+      createAccountButton.addEventListener("click", saveAccount);
+      writeToggle.addEventListener("change", () => {
+        updateWriteButtons();
+        loadAvailableProducts();
+      });
+      createBatchButton.addEventListener("click", createBatch);
+      shipButton.addEventListener("click", shipProduct);
+      receiveButton.addEventListener("click", receiveProduct);
+      qrButton.addEventListener("click", generateQr);
+
+      setAddress(localStorage.getItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY));
+      setBalance();
+      updateWriteButtons();
+
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+      }
+    </script>
+  </body>
+</html>

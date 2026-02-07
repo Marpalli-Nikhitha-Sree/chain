@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supply-Chain Dashboard</title>
+    <script>
+      window.location.replace("./dashboard.html");
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f6f7fb;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 940px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: #475569;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #0f172a;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .card {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+      .label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+      .value {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 6px;
+        color: #0f172a;
+        word-break: break-all;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #0f172a;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .input-row {
+        margin-top: 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      input[type="text"] {
+        flex: 1 1 260px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5f5;
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+      .hint {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Consumer Verification</h1>
+      <p>
+        Scan a batch ID or enter it manually to verify provenance. Wallet connection is used for
+        identification only and all interactions remain read-only.
+      </p>
+
+      <div class="row">
+        <button id="connectButton">Connect MetaMask</button>
+        <span class="badge" id="modeBadge">Mode: Local Hardhat</span>
+        <span class="badge" id="networkBadge">Network: Unknown</span>
+      </div>
+
+      <div class="card">
+        <div class="label">Connected wallet address</div>
+        <div class="value" id="walletAddress">Not connected</div>
+        <div class="status" id="statusText">Waiting for connection…</div>
+      </div>
+
+      <div class="input-row">
+        <input id="batchInput" type="text" placeholder="Enter batch ID" />
+        <button id="lookupButton" class="secondary">Lookup Batch</button>
+      </div>
+      <div class="hint">Consumer interface is read-only and does not request signatures.</div>
+
+      <div class="card">
+        <div class="label">Batch overview</div>
+        <div class="grid">
+          <div>
+            <div class="label">Product</div>
+            <div class="value" id="productValue">—</div>
+          </div>
+          <div>
+            <div class="label">Origin</div>
+            <div class="value" id="originValue">—</div>
+          </div>
+          <div>
+            <div class="label">Manufacturer</div>
+            <div class="value" id="manufacturerValue">—</div>
+          </div>
+          <div>
+            <div class="label">Created</div>
+            <div class="value" id="createdValue">—</div>
+          </div>
+          <div>
+            <div class="label">Current holder</div>
+            <div class="value" id="holderValue">—</div>
+          </div>
+          <div>
+            <div class="label">Stage</div>
+            <div class="value" id="stageValue">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Integrity status</div>
+        <div class="value" id="integrityValue">No analysis yet.</div>
+        <ul id="anomalyList"></ul>
+      </div>
+
+      <div class="card">
+        <div class="label">Transfers</div>
+        <ul id="transferList"></ul>
+      </div>
+
+      <div class="card">
+        <div class="label">Conditions</div>
+        <ul id="conditionList"></ul>
+      </div>
+
+      <div class="input-row">
+        <input
+          id="commandInput"
+          type="text"
+          placeholder='Type command (e.g., "switch to main network")'
+        />
+        <button id="commandButton" class="secondary">Run Command</button>
+      </div>
+      <div class="hint">
+        Use the command “switch to main network” to stop assuming a local Hardhat environment.
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="./config.js"></script>
+    <script src="./anomaly.js"></script>
+    <script>
+      const connectButton = document.getElementById("connectButton");
+      const walletAddressEl = document.getElementById("walletAddress");
+      const statusTextEl = document.getElementById("statusText");
+      const modeBadge = document.getElementById("modeBadge");
+      const networkBadge = document.getElementById("networkBadge");
+      const commandInput = document.getElementById("commandInput");
+      const commandButton = document.getElementById("commandButton");
+      const lookupButton = document.getElementById("lookupButton");
+      const batchInput = document.getElementById("batchInput");
+      const productValue = document.getElementById("productValue");
+      const originValue = document.getElementById("originValue");
+      const manufacturerValue = document.getElementById("manufacturerValue");
+      const createdValue = document.getElementById("createdValue");
+      const holderValue = document.getElementById("holderValue");
+      const stageValue = document.getElementById("stageValue");
+      const integrityValue = document.getElementById("integrityValue");
+      const anomalyList = document.getElementById("anomalyList");
+      const transferList = document.getElementById("transferList");
+      const conditionList = document.getElementById("conditionList");
+
+      let assumeLocalHardhat = true;
+      let connectedAddress = null;
+
+      const updateModeBadge = () => {
+        modeBadge.textContent = assumeLocalHardhat
+          ? "Mode: Local Hardhat"
+          : "Mode: MetaMask Active Network";
+      };
+
+      const setStatus = (message) => {
+        statusTextEl.textContent = message;
+      };
+
+      const setAddress = (address) => {
+        connectedAddress = address;
+        if (address) {
+          walletAddressEl.textContent = address;
+          localStorage.setItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY, address);
+        } else {
+          walletAddressEl.textContent = "Not connected";
+          localStorage.removeItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY);
+        }
+      };
+
+      const setNetworkBadge = (chainId) => {
+        if (!chainId) {
+          networkBadge.textContent = "Network: Unknown";
+          return;
+        }
+        const label =
+          chainId === SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID
+            ? "Hardhat (31337)"
+            : `Chain ${parseInt(chainId, 16)}`;
+        networkBadge.textContent = `Network: ${label}`;
+      };
+
+      const ensureMetaMask = () => {
+        if (!window.ethereum) {
+          setStatus("MetaMask not detected. Please install MetaMask to continue.");
+          return false;
+        }
+        return true;
+      };
+
+      const getProvider = () => {
+        return new ethers.providers.Web3Provider(window.ethereum, "any");
+      };
+
+      const getContract = (provider) => {
+        if (!SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS) {
+          throw new Error("Set CONTRACT_ADDRESS in frontend/config.js after deployment.");
+        }
+        return new ethers.Contract(
+          SUPPLYCHAIN_CONFIG.CONTRACT_ADDRESS,
+          SUPPLYCHAIN_CONFIG.ABI,
+          provider
+        );
+      };
+
+      const stageLabel = (stage) => {
+        switch (Number(stage)) {
+          case 0:
+            return "Manufacturer → Distributor";
+          case 1:
+            return "Distributor → Retailer";
+          case 2:
+            return "Retailer → Consumer";
+          case 3:
+            return "Consumer (final)";
+          default:
+            return "Unknown";
+        }
+      };
+
+      const connectWallet = async () => {
+        if (!ensureMetaMask()) return;
+
+        try {
+          setStatus("Requesting account access...");
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          const address = accounts?.[0] ?? null;
+          if (!address) {
+            setStatus("No account returned by MetaMask.");
+            setAddress(null);
+            return;
+          }
+          setAddress(address);
+          setStatus("Wallet connected. Read-only mode enabled.");
+
+          const chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setNetworkBadge(chainId);
+
+          if (assumeLocalHardhat && chainId !== SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID) {
+            setStatus(
+              "Connected, but you are not on Hardhat 31337. Please switch to Hardhat in MetaMask for local testing."
+            );
+          }
+        } catch (error) {
+          setStatus(`Connection failed: ${error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const handleAccountsChanged = (accounts) => {
+        const address = accounts?.[0] ?? null;
+        if (!address) {
+          setAddress(null);
+          setStatus("Wallet disconnected.");
+          return;
+        }
+        setAddress(address);
+        setStatus("Wallet account updated. Read-only mode enabled.");
+      };
+
+      const handleChainChanged = (chainId) => {
+        setNetworkBadge(chainId);
+        if (assumeLocalHardhat && chainId !== SUPPLYCHAIN_CONFIG.HARDHAT_CHAIN_ID) {
+          setStatus("Network changed. For local testing, switch back to Hardhat 31337.");
+        } else {
+          setStatus("Network changed. Read-only mode enabled.");
+        }
+      };
+
+      const formatTimestamp = (value) => {
+        if (!value) return "—";
+        const date = new Date(Number(value) * 1000);
+        return date.toLocaleString();
+      };
+
+      const clearLists = () => {
+        anomalyList.innerHTML = "";
+        transferList.innerHTML = "";
+        conditionList.innerHTML = "";
+      };
+
+      const renderList = (listEl, items, formatter) => {
+        listEl.innerHTML = "";
+        if (!items.length) {
+          const li = document.createElement("li");
+          li.textContent = "No records.";
+          listEl.appendChild(li);
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = formatter(item);
+          listEl.appendChild(li);
+        });
+      };
+
+      const lookupBatch = async () => {
+        const batchId = batchInput.value.trim();
+        if (!batchId) return;
+        if (!ensureMetaMask()) return;
+
+        try {
+          setStatus("Fetching batch data...");
+          const provider = getProvider();
+          const contract = getContract(provider);
+
+          const batch = await contract.getBatch(batchId);
+          const transfers = await contract.getTransfers(batchId);
+          const conditions = await contract.getConditions(batchId);
+
+          productValue.textContent = batch.productName || "—";
+          originValue.textContent = batch.origin || "—";
+          manufacturerValue.textContent = batch.manufacturer || "—";
+          createdValue.textContent = formatTimestamp(batch.createdAt);
+          holderValue.textContent = batch.currentHolder || "—";
+          stageValue.textContent = stageLabel(batch.stage);
+
+          renderList(transferList, transfers, (t) =>
+            `${t.from} → ${t.to} (${formatTimestamp(t.timestamp)}) @ ${t.location}`
+          );
+          renderList(conditionList, conditions, (c) =>
+            `${c.conditionType}: ${c.value} (observed ${formatTimestamp(c.observedAt)})`
+          );
+
+          const anomalies = analyzeAnomalies({ batch, transfers, conditions });
+          anomalyList.innerHTML = "";
+          if (anomalies.length) {
+            integrityValue.textContent = "Potential issues detected.";
+            anomalies.forEach((issue) => {
+              const li = document.createElement("li");
+              li.textContent = issue;
+              anomalyList.appendChild(li);
+            });
+          } else {
+            integrityValue.textContent = "No anomalies detected based on current rules.";
+          }
+
+          setStatus("Batch data loaded.");
+        } catch (error) {
+          clearLists();
+          integrityValue.textContent = "No analysis yet.";
+          setStatus(`Lookup failed: ${error?.reason ?? error?.message ?? "Unknown error"}`);
+        }
+      };
+
+      const runCommand = () => {
+        const command = commandInput.value.trim().toLowerCase();
+        if (!command) return;
+
+        if (command === "switch to main network") {
+          assumeLocalHardhat = false;
+          updateModeBadge();
+          setStatus("Mode updated. Using MetaMask active network.");
+        } else {
+          setStatus(`Unknown command: ${command}`);
+        }
+        commandInput.value = "";
+      };
+
+      connectButton.addEventListener("click", connectWallet);
+      commandButton.addEventListener("click", runCommand);
+      lookupButton.addEventListener("click", lookupBatch);
+      commandInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") runCommand();
+      });
+      batchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") lookupBatch();
+      });
+
+      updateModeBadge();
+      setAddress(localStorage.getItem(SUPPLYCHAIN_CONFIG.STORAGE_KEY));
+
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+      }
+    </script>
+  </body>
+</html>
