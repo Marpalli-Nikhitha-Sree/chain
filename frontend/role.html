@@ -217,6 +217,9 @@
           <input id="productNameInput" type="text" placeholder="Product name" />
           <input id="originInput" type="text" placeholder="Origin" />
           <input id="categoryInput" type="text" placeholder="Category" />
+          <input id="distributorInput" type="text" placeholder="Distributor address" />
+          <input id="retailerInput" type="text" placeholder="Retailer address" />
+          <input id="customerInput" type="text" placeholder="Customer address" />
           <input id="priceInput" type="number" placeholder="Batch price (ETH)" step="0.0001" />
           <input id="latInput" type="number" placeholder="Latitude" step="0.000001" />
           <input id="lngInput" type="number" placeholder="Longitude" step="0.000001" />
@@ -325,6 +328,9 @@
       const productNameInput = document.getElementById("productNameInput");
       const originInput = document.getElementById("originInput");
       const categoryInput = document.getElementById("categoryInput");
+      const distributorInput = document.getElementById("distributorInput");
+      const retailerInput = document.getElementById("retailerInput");
+      const customerInput = document.getElementById("customerInput");
       const priceInput = document.getElementById("priceInput");
       const latInput = document.getElementById("latInput");
       const lngInput = document.getElementById("lngInput");
@@ -648,6 +654,9 @@
           const productName = productNameInput.value.trim();
           const origin = originInput.value.trim();
           const category = categoryInput.value.trim();
+          const distributor = distributorInput.value.trim();
+          const retailer = retailerInput.value.trim();
+          const customer = customerInput.value.trim();
           const priceEth = priceInput.value.trim();
           const latitude = latInput.value.trim();
           const longitude = lngInput.value.trim();
@@ -658,11 +667,25 @@
             return;
           }
 
+          if (!distributor || !retailer || !customer) {
+            setStatus("Distributor, retailer, and customer addresses are required for route tracking.");
+            return;
+          }
+
+          if (
+            !ethers.utils.isAddress(distributor) ||
+            !ethers.utils.isAddress(retailer) ||
+            !ethers.utils.isAddress(customer)
+          ) {
+            setStatus("Enter valid Ethereum addresses for distributor, retailer, and customer.");
+            return;
+          }
+
           const provider = getProvider();
           const signer = provider.getSigner();
           const contract = getContract(signer);
           const priceWei = ethers.utils.parseEther(priceEth);
-          const expectedRoute = [];
+          const expectedRoute = [distributor, retailer, customer];
 
           setStatus("Submitting batch creation...");
           const tx = await contract.createBatch(
@@ -800,10 +823,13 @@
         const li = document.createElement("li");
         li.className = "item";
         const priceEth = ethers.utils.formatEther(batch.price || 0);
+        const createdAt = Number(batch.createdAt || 0);
+        const createdLabel = createdAt ? new Date(createdAt * 1000).toLocaleString() : "—";
         li.innerHTML = `
           <div class="item-title">${batch.productName} <span class="pill">${batch.batchId}</span></div>
           <div class="item-meta">Category: ${batch.category || "—"} · Price: ${priceEth} ETH</div>
           <div class="item-meta">Stage: ${Number(batch.stage)} · Holder: ${batch.currentHolder}</div>
+          <div class="item-meta">Created: ${createdLabel}</div>
           ${extraMeta ? `<div class="item-meta">${extraMeta}</div>` : ""}
         `;
         return li;
@@ -965,7 +991,8 @@
           const batch = await contract.getBatch(batchId);
           const transfers = await contract.getTransfers(batchId);
           const conditions = await contract.getConditions(batchId);
-          const anomalies = analyzeAnomalies({ batch, transfers, conditions });
+          const batchIds = await contract.getBatchIds();
+          const anomalies = analyzeAnomalies({ batch, transfers, conditions, batchIds });
 
           const payload = {
             batchId: batch.batchId,

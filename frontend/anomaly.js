@@ -1,4 +1,4 @@
-const analyzeAnomalies = ({ batch, transfers, conditions }) => {
+const analyzeAnomalies = ({ batch, transfers, conditions, batchIds }) => {
   const anomalies = [];
 
   if (!batch?.exists) {
@@ -7,15 +7,17 @@ const analyzeAnomalies = ({ batch, transfers, conditions }) => {
   }
 
   const transferTimestamps = transfers.map((t) => Number(t.timestamp || 0));
-  for (let i = 1; i < transferTimestamps.length; i += 1) {
-    if (transferTimestamps[i] < transferTimestamps[i - 1]) {
-      anomalies.push("Inconsistent transfer timestamps detected.");
+  const createdAt = Number(batch.createdAt || 0);
+  const timeline = [createdAt, ...transferTimestamps].filter((t) => t > 0);
+  for (let i = 1; i < timeline.length; i += 1) {
+    if (timeline[i] < timeline[i - 1]) {
+      anomalies.push("Timeline goes backwards (timestamp order violated).");
       break;
     }
   }
 
   if (transfers.length > 3) {
-    anomalies.push("Transfer count exceeds expected flow (manufacturer → distributor → retailer → consumer)." );
+    anomalies.push("Transfer count exceeds expected flow (manufacturer → distributor → retailer → consumer).");
   }
 
   if (transfers.length >= 1 && transfers[0].from?.toLowerCase() !== batch.manufacturer?.toLowerCase()) {
@@ -33,12 +35,24 @@ const analyzeAnomalies = ({ batch, transfers, conditions }) => {
     transferFingerprints.add(fingerprint);
   }
 
+  if (Array.isArray(batchIds)) {
+    const matches = batchIds.filter((id) => id === batch.batchId).length;
+    if (matches > 1) {
+      anomalies.push("Duplicate batch ID detected (possible fake product).");
+    }
+  }
+
   if (batch.expectedRoute?.length) {
     const expectedRoute = batch.expectedRoute.map((addr) => addr.toLowerCase());
     const visitedRoute = transfers.map((t) => String(t.to).toLowerCase());
-    for (const stop of visitedRoute) {
-      if (!expectedRoute.includes(stop)) {
-        anomalies.push("Route deviation detected.");
+
+    if (visitedRoute.length > expectedRoute.length) {
+      anomalies.push("Route deviation detected (extra hops).");
+    }
+
+    for (let i = 0; i < visitedRoute.length; i += 1) {
+      if (expectedRoute[i] && visitedRoute[i] !== expectedRoute[i]) {
+        anomalies.push("Route deviation detected (stage order mismatch).");
         break;
       }
     }

@@ -392,6 +392,7 @@
           const batch = await contract.getBatch(batchId);
           const transfers = await contract.getTransfers(batchId);
           const conditions = await contract.getConditions(batchId);
+          const batchIds = await contract.getBatchIds();
 
           productValue.textContent = batch.productName || "—";
           originValue.textContent = batch.origin || "—";
@@ -407,7 +408,7 @@
             `${c.conditionType}: ${c.value} (observed ${formatTimestamp(c.observedAt)})`
           );
 
-          const anomalies = analyzeAnomalies({ batch, transfers, conditions });
+          const anomalies = analyzeAnomalies({ batch, transfers, conditions, batchIds });
           anomalyList.innerHTML = "";
           if (anomalies.length) {
             integrityValue.textContent = "Potential issues detected.";
